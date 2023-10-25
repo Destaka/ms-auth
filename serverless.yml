@@ -1,0 +1,26 @@
+service: ms-auth
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+
+custom:
+  serviceName: auth
+  contextPath: ${self:custom.serviceName}
+  baseApi: ${self:custom.contextPath}
+  funcDir: src/framework/functions
+
+functions:
+  createUserIdentity:
+    handler: ${self:custom.funcDir}/users/createUserIdentity.handler
+    events:
+      - http:
+          path: ${self:custom.baseApi}/sign-in
+          method: post
+          cors:
+            origin: '*'
+            headers: '*'
