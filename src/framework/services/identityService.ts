@@ -5,7 +5,8 @@ import { Either, left, right } from '../shared/either'
 import { IError } from '../shared/iError'
 import { IDataIdentityService, IIdentityService } from '../../business/services/iIdentityService'
 import { ICreateUserIdentityResponseDto } from '../../business/dto/users/createUserIdentityDto'
-import { UserIdentityCreationFailed } from '../../business/modules/errors/userIdentityErrors'
+import { UserAuthFailed, UserIdentityCreationFailed, UserNotFound } from '../../business/modules/errors/userIdentityErrors'
+import { AuthorizerDto } from '../../business/dto/authorizer/authorizerDto'
 
 @injectable()
 export class IdentityService implements IIdentityService {
@@ -55,6 +56,28 @@ export class IdentityService implements IIdentityService {
     } catch (error) {
       console.log('deu ruim ', error)
       return left(UserIdentityCreationFailed)
+    }
+  }
+
+  async consultUser(token: string): Promise<Either<IError, AuthorizerDto>> {
+    try {
+      const response = await this.cognito.getUser({ AccessToken: token }).promise()
+      const userId = response
+        .UserAttributes
+        .find(item => item.Name === 'custom:user_id')?.Value
+
+      if (!userId) {
+        return left(UserNotFound)
+      }
+
+      return right({
+        username: response.Username,
+        userId,
+      })
+    } catch (error) {
+      console.log('ConsultUser::error => ', error)
+
+      return left(UserAuthFailed)
     }
   }
 }
