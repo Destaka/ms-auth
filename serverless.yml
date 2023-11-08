@@ -39,6 +39,15 @@ functions:
     handler: ${self:custom.funcDir}/users/createUserIdentity.handler
   authorizer:
     handler: ${self:custom.funcDir}/authorizer/authorizer.handler
+  signIn:
+    handler: ${self:custom.funcDir}/users/signIn.handler
+    events:
+      - http:
+          path: ${self:custom.baseApi}/sign-in
+          method: post
+          cors:
+            origin: '*'
+            headers: '*'
 
 resources:
   - ${file(./devops/resources/ssm.yml)}
