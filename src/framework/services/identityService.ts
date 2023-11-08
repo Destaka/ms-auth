@@ -5,8 +5,9 @@ import { Either, left, right } from '../shared/either'
 import { IError } from '../shared/iError'
 import { IDataIdentityService, IIdentityService } from '../../business/services/iIdentityService'
 import { ICreateUserIdentityResponseDto } from '../../business/dto/users/createUserIdentityDto'
-import { UserAuthFailed, UserIdentityCreationFailed, UserNotFound } from '../../business/modules/errors/userIdentityErrors'
+import { SignInServiceFailed, UserAuthFailed, UserIdentityCreationFailed, UserNotFound } from '../../business/modules/errors/userIdentityErrors'
 import { AuthorizerDto } from '../../business/dto/authorizer/authorizerDto'
+import { ISignResponse, InputSignInDto } from '../../business/dto/users/signInDto'
 
 @injectable()
 export class IdentityService implements IIdentityService {
@@ -78,6 +79,38 @@ export class IdentityService implements IIdentityService {
       console.log('ConsultUser::error => ', error)
 
       return left(UserAuthFailed)
+    }
+  }
+
+  async auth(data: InputSignInDto): Promise<Either<IError, ISignResponse>> {
+    try {
+      const { user_pool_id, client_id } = process.env
+      const params = {
+        AuthFlow: "ADMIN_NO_SRP_AUTH",
+        UserPoolId: user_pool_id!,
+        ClientId: client_id!,
+        AuthParameters: {
+          USERNAME: data.email,
+          PASSWORD: data.password
+        }
+      }
+
+      const response = await this.cognito.adminInitiateAuth(params).promise()
+
+      console.log('response data ', response)
+      if (!response.AuthenticationResult?.AccessToken) {
+        return left(SignInServiceFailed)
+      }
+
+      return right({
+        token: response.AuthenticationResult?.AccessToken!,
+        refreshToken: response.AuthenticationResult?.RefreshToken!,
+        expiresIn: response.AuthenticationResult?.ExpiresIn!
+      })
+    } catch (error) {
+      console.log('deu ruim ', error)
+
+      return left(SignInServiceFailed)
     }
   }
 }
