@@ -51,4 +51,5 @@ functions:
 
 resources:
   - ${file(./devops/resources/ssm.yml)}
+  - ${file(./devops/resources/authorizer.yml)}
   - ${file(./devops/resources/cognito.yml)}
