@@ -10,10 +10,10 @@ import { InputCreateUserIdentity } from '../../../controller/serializers/users/i
 
 export const handler = httpHandler(async (event: APIGatewayProxyEvent, context: Context) => {
   context.callbackWaitsForEmptyEventLoop = false
-  console.log('Function::Event => ', event.body)
+  console.log('Function::Event => ', event)
 
   const operator = container.get(CreateUserIdentityOperator)
-  const input = new InputCreateUserIdentity(JSON.parse(event.body as string))
+  const input = new InputCreateUserIdentity(event as Object)
   const result = await operator.exec(input)
 
   if (result.isLeft()) {
